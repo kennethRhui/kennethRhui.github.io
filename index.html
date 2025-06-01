@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保險知識測驗</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to top for scroll */
+            min-height: 100vh;
+            padding-top: 20px; /* Add some padding at the top */
+        }
+
+        .quiz-container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #007bff;
+            font-size: 1.8em;
+            margin-bottom: 20px;
+        }
+
+        .question-area {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        #chapter-source {
+            font-size: 0.8em;
+            color: #777;
+            margin-bottom: 5px;
+            font-style: italic;
+        }
+
+        #question-text {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .options-area button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .options-area button:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        
+        .options-area button:disabled {
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .feedback-area {
+            margin-top: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            min-height: 25px; /* Reserve space */
+        }
+
+        .feedback-area .correct {
+            color: #28a745;
+        }
+
+        .feedback-area .incorrect {
+            color: #dc3545;
+        }
+
+        .progress-area {
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #555;
+        }
+        
+        #score-area {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        #next-btn, #restart-btn, #start-btn {
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+        }
+        #next-btn:hover, #restart-btn:hover, #start-btn:hover {
+            background-color: #1e7e34;
+        }
+        #next-btn {
+            background-color: #ffc107;
+            color: #333;
+        }
+        #next-btn:hover {
+            background-color: #e0a800;
+        }
+
+        /* Highlight correct/incorrect answers */
+        .options-area button.correct-answer {
+            background-color: #28a745 !important; /* Green for correct */
+            color: white !important;
+        }
+        .options-area button.wrong-answer {
+            background-color: #dc3545 !important; /* Red for selected wrong */
+            color: white !important;
+        }
+
+        .initial-screen {
+            text-align: center;
+        }
+        
+    </style>
+</head>
+<body>
+
+    <div class="quiz-container">
+        <div id="initial-screen">
+            <h1>保險知識測驗</h1>
+            <p>點擊下方按鈕開始測驗。每次測驗將隨機抽取25題。</p>
+            <button id="start-btn">開始測驗</button>
+        </div>
+
+        <div id="quiz-proper" style="display: none;">
+            <div class="question-area">
+                <p id="chapter-source"></p>
+                <p id="question-text"></p>
+            </div>
+            <div id="options-area">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <div class="feedback-area" id="feedback-text"></div>
+            <div class="progress-area" id="progress-text"></div>
+            <button id="next-btn" style="display: none;">下一題</button>
+            <div id="score-area" style="display: none;"></div>
+            <button id="restart-btn" style="display: none;">重新測驗</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            // CH7 再保險
+            {
+                question: "將危險責任移轉之一方，稱為？",
+                options: ["再保險人 (reinsurer)", "原保險人 (original insurer)", "被保險人", "保險經紀人"],
+                answer: "原保險人 (original insurer)",
+                chapter: "CH7 再保險"
+            },
+            {
+                question: "承受危險責任移轉的一方，稱為？",
+                options: ["再保險人 (reinsurer)", "原保險人 (original insurer)", "要保人", "保險代理人"],
+                answer: "再保險人 (reinsurer)",
+                chapter: "CH7 再保險"
+            },
+            {
+                question: "原保險契約的被保險人對再保險人是否擁有賠償請求權？",
+                options: ["有，可以直接請求", "無賠償請求權", "有，但需透過原保險人", "視情況而定"],
+                answer: "無賠償請求權",
+                chapter: "CH7 再保險"
+            },
+            {
+                question: "合約再保險(Treaty Reinsurance)的特性是？",
+                options: ["逐筆洽商，雙方均有選擇權", "事先訂立契約，雙方均具義務性", "僅原保險人有選擇權", "僅再保險人有選擇權"],
+                answer: "事先訂立契約，雙方均具義務性",
+                chapter: "CH7 再保險"
+            },
+            {
+                question: "固定比率再保險 (Quota Share Re) 的運作方式是？",
+                options: ["超過自留額部分才分保", "按固定比率分與再保險人", "以損失金額為分保基礎", "僅適用於巨額賠款"],
+                answer: "按固定比率分與再保險人",
+                chapter: "CH7 再保險"
+            },
+            // CH8 汽車保險
+            {
+                question: "汽車保險中，「慢車」不包含下列何者？",
+                options: ["腳踏自行車", "電動輔助自行車(有踏板)", "個人行動器具(電動滑板車)", "汽車"],
+                answer: "汽車",
+                chapter: "CH8 汽車保險"
+            },
+            {
+                question: "汽車車體損失保險甲式的承保範圍，下列何者錯誤？",
+                options: ["碰撞、傾覆", "火災、閃電、雷擊", "第三者非善意行為", "不明原因的毀損"],
+                answer: "不明原因的毀損", // 甲式通常也包含不明原因，但題目中常會以此區分乙式，此處按教材乙式不保不明原因，丙式僅車對車。
+                chapter: "CH8 汽車保險"
+            },
+             {
+                question: "汽車車體損失保險丙式的主要承保範圍是？",
+                options: ["與車輛發生碰撞、擦撞所致之毀損滅失", "火災、爆炸", "拋擲物或墜落物造成之損失", "第三者非善意行為"],
+                answer: "與車輛發生碰撞、擦撞所致之毀損滅失",
+                chapter: "CH8 汽車保險"
+            },
+            {
+                question: "汽車竊盜損失險，被保險汽車因遭受偷竊、搶奪、強盜所致之毀損滅失，理賠金額計算方式通常會如何？",
+                options: ["全額理賠，無自負額", "保險金額 x 賠償率 - 自負額", "僅賠修復費用", "依市價全額賠償"],
+                answer: "保險金額 x 賠償率 - 自負額",
+                chapter: "CH8 汽車保險"
+            },
+            // CH9 強制汽車責任險
+            {
+                question: "強制汽車責任保險的立法意旨是？",
+                options: ["保障駕駛人自身財產", "使汽車交通事故受害人迅速獲得基本保障", "減輕肇事者刑事責任", "提供車輛維修費用"],
+                answer: "使汽車交通事故受害人迅速獲得基本保障",
+                chapter: "CH9 強制汽車責任險"
+            },
+            {
+                question: "強制汽車責任保險的死亡給付，現行法定金額為多少？",
+                options: ["100萬元", "160萬元", "200萬元", "220萬元"],
+                answer: "200萬元",
+                chapter: "CH9 強制汽車責任險"
+            },
+            {
+                question: "強制汽車責任保險的醫療費用給付，每人最高限額為多少？",
+                options: ["10萬元", "20萬元", "30萬元", "50萬元"],
+                answer: "20萬元",
+                chapter: "CH9 強制汽車責任險"
+            },
+            {
+                question: "下列何種情況，強制汽車責任保險的保險人「得」向被保險人求償？",
+                options: ["被保險人過失駕駛", "被保險人酒醉駕車所致事故", "天災導致事故", "對方車輛違規"],
+                answer: "被保險人酒醉駕車所致事故",
+                chapter: "CH9 強制汽車責任險"
+            },
+            // CH10 火災保險
+            {
+                question: "火災保險承保事故中，火災之構成要件不包含下列何者？",
+                options: ["燃燒", "灼熱", "火焰", "濃煙"],
+                answer: "濃煙", // 燃燒、灼熱、火焰三者缺一不可
+                chapter: "CH10 火災保險"
+            },
+            {
+                question: "住宅火災保險中，建築物內動產的保險金額通常是如何約定？",
+                options: ["與建築物保額相同", "建築物保險金額之30%，最高80萬元", "固定100萬元", "由被保險人自行決定，無上限"],
+                answer: "建築物保險金額之30%，最高80萬元",
+                chapter: "CH10 火災保險"
+            },
+            {
+                question: "住宅火災及地震基本保險中，地震基本保險的建築物保險金額最高為多少？",
+                options: ["100萬元", "150萬元", "200萬元", "無上限"],
+                answer: "150萬元",
+                chapter: "CH10 火災保險"
+            },
+            // CH11 傷害保險
+            {
+                question: "傷害保險(意外險)中，「意外傷害事故」必須具備下列哪些性質？",
+                options: ["內在的、漸進的、可預期的", "外來的、突發的、不可預見的", "慢性的、職業相關的、自願的", "情緒性的、心理的、非身體的"],
+                answer: "外來的、突發的、不可預見的",
+                chapter: "CH11 傷害保險"
+            },
+            {
+                question: "傷害保險的保險費率，主要依據下列何者訂定？",
+                options: ["年齡與性別", "被保險人的職業等級", "健康狀況", "居住地區"],
+                answer: "被保險人的職業等級",
+                chapter: "CH11 傷害保險"
+            },
+            // CH12 健康保險
+            {
+                question: "健康保險契約訂立時，被保險人「已在疾病」中者，保險人對該項疾病是否負給付責任？",
+                options: ["仍應負給付責任", "不負給付責任", "減額給付責任", "加費後負給付責任"],
+                answer: "不負給付責任",
+                chapter: "CH12 健康保險"
+            },
+            {
+                question: "實支實付型住院醫療險，其理賠項目通常不包含下列何者？",
+                options: ["病房費差額", "手術費", "醫療雜費", "看護費(除非特別約定)"],
+                answer: "看護費(除非特別約定)",
+                chapter: "CH12 健康保險"
+            },
+            {
+                question: "重大疾病保險通常約定，被保險人於初次罹患符合條款約定之重大疾病時，保險公司會如何給付？",
+                options: ["分期給付醫療費用", "一次性給付保險金額", "僅給付住院日額", "依實際醫療支出給付"],
+                answer: "一次性給付保險金額",
+                chapter: "CH12 健康保險"
+            },
+            // CH13 人壽保險
+            {
+                question: "由第三人訂立之死亡保險契約，未經被保險人書面同意並約定保險金額，其契約效力為何？",
+                options: ["有效", "無效", "得撤銷", "效力未定"],
+                answer: "無效",
+                chapter: "CH13 人壽保險"
+            },
+            {
+                question: "被保險人故意自殺者，保險人是否給付保險金？",
+                options: ["一律不給付", "一律給付", "保險契約訂立或復效之日起二年後故意自殺，保險人仍負給付責任", "僅退還所繳保費"],
+                answer: "保險契約訂立或復效之日起二年後故意自殺，保險人仍負給付責任",
+                chapter: "CH13 人壽保險"
+            },
+            {
+                question: "提供特定期間死亡保障，期滿若生存則契約終止，此為何種人壽保險？",
+                options: ["終身壽險", "定期壽險", "生死合險(儲蓄險)", "年金保險"],
+                answer: "定期壽險",
+                chapter: "CH13 人壽保險"
+            },
+            {
+                question: "人壽保險契約的「寬限期間」，若為年繳或半年繳保費，通常為多久？",
+                options: ["催告到達翌日起10日", "催告到達翌日起30日", "繳費日起15日", "繳費日起60日"],
+                answer: "催告到達翌日起30日",
+                chapter: "CH13 人壽保險"
+            }
+        ];
+
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        const NUM_QUESTIONS_PER_QUIZ = 25;
+
+        const initialScreen = document.getElementById('initial-screen');
+        const quizProper = document.getElementById('quiz-proper');
+        const startBtn = document.getElementById('start-btn');
+        
+        const chapterSourceEl = document.getElementById('chapter-source');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsAreaEl = document.getElementById('options-area');
+        const feedbackTextEl = document.getElementById('feedback-text');
+        const progressTextEl = document.getElementById('progress-text');
+        const nextBtn = document.getElementById('next-btn');
+        const scoreAreaEl = document.getElementById('score-area');
+        const restartBtn = document.getElementById('restart-btn');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startQuiz() {
+            initialScreen.style.display = 'none';
+            quizProper.style.display = 'block';
+            scoreAreaEl.style.display = 'none';
+            restartBtn.style.display = 'none';
+            nextBtn.style.display = 'none';
+
+            shuffleArray(allQuestions);
+            currentQuestions = allQuestions.slice(0, Math.min(NUM_QUESTIONS_PER_QUIZ, allQuestions.length)); // Ensure not to exceed available questions
+            currentQuestionIndex = 0;
+            score = 0;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            feedbackTextEl.innerHTML = '';
+            nextBtn.style.display = 'none';
+            optionsAreaEl.innerHTML = ''; // Clear previous options
+
+            if (currentQuestionIndex < currentQuestions.length) {
+                const questionData = currentQuestions[currentQuestionIndex];
+                chapterSourceEl.textContent = `出處: ${questionData.chapter}`;
+                questionTextEl.textContent = questionData.question;
+
+                const options = [...questionData.options];
+                shuffleArray(options);
+
+                options.forEach(option => {
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.onclick = () => selectAnswer(option, questionData.answer, button);
+                    optionsAreaEl.appendChild(button);
+                });
+                progressTextEl.textContent = `第 ${currentQuestionIndex + 1} / ${currentQuestions.length} 題`;
+            } else {
+                showResults();
+            }
+        }
+
+        function selectAnswer(selectedOption, correctAnswer, selectedButton) {
+            const allOptionButtons = optionsAreaEl.getElementsByTagName('button');
+            for (let btn of allOptionButtons) {
+                btn.disabled = true; // Disable all buttons after an answer
+                if (btn.textContent === correctAnswer) {
+                    btn.classList.add('correct-answer');
+                }
+            }
+
+            if (selectedOption === correctAnswer) {
+                feedbackTextEl.textContent = '正確！';
+                feedbackTextEl.className = 'feedback-area correct';
+                score++;
+            } else {
+                feedbackTextEl.textContent = `錯誤。正確答案是：${correctAnswer}`;
+                feedbackTextEl.className = 'feedback-area incorrect';
+                selectedButton.classList.add('wrong-answer');
+            }
+            nextBtn.style.display = 'block';
+             if (currentQuestionIndex === currentQuestions.length - 1) {
+                nextBtn.textContent = '查看結果';
+            } else {
+                nextBtn.textContent = '下一題';
+            }
+        }
+
+        function showNextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+        
+        function showResults() {
+            questionTextEl.style.display = 'none';
+            optionsAreaEl.style.display = 'none';
+            feedbackTextEl.style.display = 'none';
+            progressTextEl.style.display = 'none';
+            chapterSourceEl.style.display = 'none';
+            nextBtn.style.display = 'none';
+
+            scoreAreaEl.innerHTML = `測驗結束！<br>您的得分是：${score} / ${currentQuestions.length}`;
+            scoreAreaEl.style.display = 'block';
+            restartBtn.style.display = 'block';
+        }
+
+        startBtn.addEventListener('click', startQuiz);
+        nextBtn.addEventListener('click', showNextQuestion);
+        restartBtn.addEventListener('click', () => {
+            // Reset visibility for restarting
+            questionTextEl.style.display = 'block';
+            optionsAreaEl.style.display = 'block';
+            feedbackTextEl.style.display = 'block';
+            progressTextEl.style.display = 'block';
+            chapterSourceEl.style.display = 'block';
+            startQuiz();
+        });
+
+    </script>
+</body>
+</html>
