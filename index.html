@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>保險學期末考重點測驗</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>保險學期末考重點測驗</h1>
+        
+        <div id="quiz-area">
+            <div id="question-header">
+                <p id="question-number"></p>
+                <p id="chapter-ref"></p>
+            </div>
+            <h2 id="question">題目將顯示於此</h2>
+            <div id="options-container">
+                <!-- Options will be dynamically inserted here -->
+            </div>
+            <button id="next-button" style="display:none;">下一題 / 查看結果</button>
+            <p id="feedback"></p>
+        </div>
+
+        <div id="result-area" style="display:none;">
+            <h2>測驗結束！</h2>
+            <p id="score"></p>
+            <p id="summary"></p>
+            <button id="restart-button">重新測驗</button>
+        </div>
+         <button id="start-button">開始測驗</button>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
