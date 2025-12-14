@@ -1,37 +1,694 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>保險學期末考重點測驗</title>
-    <link rel="stylesheet" href="style.css">
+    <title>East Asia Geography Comprehensive Quiz</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --correct-color: #27ae60;
+            --wrong-color: #c0392b;
+            --bg-color: #ecf0f1;
+        }
+
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            background-color: white;
+            width: 100%;
+            max-width: 800px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            overflow: hidden;
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 24px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-top: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent-color);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-box {
+            margin-bottom: 25px;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .options-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background-color: white;
+            border: 2px solid #ddd;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .option-btn:hover:not([disabled]) {
+            background-color: #f7f9fc;
+            border-color: var(--accent-color);
+        }
+
+        .option-btn.correct {
+            background-color: #d4edda;
+            border-color: var(--correct-color);
+            color: #155724;
+        }
+
+        .option-btn.wrong {
+            background-color: #f8d7da;
+            border-color: var(--wrong-color);
+            color: #721c24;
+        }
+
+        .feedback-section {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            border-left: 5px solid var(--primary-color);
+            display: none;
+        }
+
+        .source-tag {
+            display: inline-block;
+            background-color: #e2e6ea;
+            color: #555;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-top: 10px;
+            font-family: monospace;
+        }
+
+        .controls {
+            margin-top: 20px;
+            text-align: right;
+        }
+
+        .next-btn {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            display: none;
+        }
+
+        .next-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .score-screen {
+            text-align: center;
+            display: none;
+        }
+
+        .score-number {
+            font-size: 48px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+    </style>
 </head>
 <body>
-    <div class="quiz-container">
-        <h1>保險學期末考重點測驗</h1>
-        
-        <div id="quiz-area">
-            <div id="question-header">
-                <p id="question-number"></p>
-                <p id="chapter-ref"></p>
-            </div>
-            <h2 id="question">題目將顯示於此</h2>
-            <div id="options-container">
-                <!-- Options will be dynamically inserted here -->
-            </div>
-            <button id="next-button" style="display:none;">下一題 / 查看結果</button>
-            <p id="feedback"></p>
+
+<div class="container">
+    <header>
+        <h1>East Asia Geography Detailed Quiz</h1>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress"></div>
+        </div>
+        <div style="margin-top: 5px; font-size: 14px; color: #666;">
+            Question <span id="current-q">1</span> / <span id="total-q">0</span>
+        </div>
+    </header>
+
+    <div id="quiz-area">
+        <div class="question-box">
+            <div class="question-text" id="question"></div>
+            <div class="options-grid" id="options"></div>
         </div>
 
-        <div id="result-area" style="display:none;">
-            <h2>測驗結束！</h2>
-            <p id="score"></p>
-            <p id="summary"></p>
-            <button id="restart-button">重新測驗</button>
+        <div class="feedback-section" id="feedback">
+            <h3 id="feedback-title" style="margin: 0 0 10px 0;"></h3>
+            <p id="feedback-correct-answer" style="margin: 0; font-weight: bold;"></p>
+            <div class="source-tag" id="feedback-source"></div>
         </div>
-         <button id="start-button">開始測驗</button>
+
+        <div class="controls">
+            <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question</button>
+        </div>
     </div>
 
-    <script src="script.js"></script>
+    <div id="result-area" class="score-screen">
+        <h2>Quiz Completed!</h2>
+        <p>Your Final Score:</p>
+        <div class="score-number" id="final-score"></div>
+        <p>Out of <span id="final-total"></span></p>
+        <button class="next-btn" style="display: inline-block;" onclick="location.reload()">Restart Quiz</button>
+    </div>
+</div>
+
+<script>
+    // Data Source: Strictly extracted from the 12 uploaded files content analysis.
+    // No paraphrasing. Using exact terms found in the files.
+    
+    const quizData = [
+        // --- CITIES 1 & (11_24) ---
+        {
+            q: "According to global urbanization trends, what happened around the year 2007?",
+            options: [
+                "Urban population surpassed rural population",
+                "Rural population surpassed urban population",
+                "Urban population reached 80% globally"
+            ],
+            correct: 0,
+            source: "Cities 1.pdf / (11_24) Cities 1.pdf",
+            loc: "Section: Global Trend"
+        },
+        {
+            q: "Which two countries are identified as having the highest urbanization rates (over 80-90%) in East Asia?",
+            options: [
+                "China and North Korea",
+                "Japan and South Korea",
+                "China and Taiwan"
+            ],
+            correct: 1,
+            source: "Cities 1.pdf / (11_24) Cities 1.pdf",
+            loc: "Section: Urbanization in East Asia"
+        },
+        {
+            q: "What does the 'Night-Time Light' imagery reveal about Japan's urban structure?",
+            options: [
+                "A dispersed rural pattern",
+                "The Pacific Belt (Tokaido corridor)",
+                "A single mega-city in Hokkaido"
+            ],
+            correct: 1,
+            source: "Cities 1.pdf",
+            loc: "Section: Night-Time Light Images"
+        },
+        {
+            q: "What is the historical 'Imperial Capital Model' of East Asian cities characterized by?",
+            options: [
+                "Circular streets and central markets",
+                "Grid pattern, orientation to cardinal points, and central palace",
+                "Coastal ports and foreign concessions"
+            ],
+            correct: 1,
+            source: "Cities 1.pdf",
+            loc: "Section: Historical Origins"
+        },
+        {
+            q: "What defines the 'Dual City' structure seen in 19th-century Shanghai?",
+            options: [
+                "A mix of 'Native City' and 'Foreign Concessions'",
+                "A mix of Industrial Zone and Residential Zone",
+                "A division between North and South Shanghai"
+            ],
+            correct: 0,
+            source: "Cities 1.pdf",
+            loc: "Section: Treaty Ports & Colonial Cities"
+        },
+        {
+            q: "Which comparison is made regarding China's cement consumption between 2011 and 2013?",
+            options: [
+                "Consumed less than Japan in the 20th century",
+                "Consumed as much in two years as the USA did over the entire 20th century",
+                "Consumed the same amount as Europe in 10 years"
+            ],
+            correct: 1,
+            source: "(11_24) Cities 1.pdf",
+            loc: "Section: The Urban Boom in China"
+        },
+        {
+            q: "What is the 'Hukou' system established in 1958?",
+            options: [
+                "A household registration system dividing population into 'agricultural' and 'non-agricultural'",
+                "A tax system for foreign investors",
+                "A visa system for international travel"
+            ],
+            correct: 0,
+            source: "Cities 1.pdf",
+            loc: "Section: Hukou System"
+        },
+        {
+            q: "What is the primary cause of 'Ghost Cities' in China mentioned in the files?",
+            options: [
+                "Natural disasters",
+                "Overbuilding and investment-led growth (Land Finance)",
+                "Massive emigration to other countries"
+            ],
+            correct: 1,
+            source: "Cities 1.pdf",
+            loc: "Section: Limits to Urban Growth"
+        },
+
+        // --- CITIES 2 & (12_1) ---
+        {
+            q: "Which district in Shanghai is described as the 'New CBD' representing global financial ambition?",
+            options: [
+                "The Bund (Puxi)",
+                "Lujiazui (Pudong)",
+                "Nanjing Road"
+            ],
+            correct: 1,
+            source: "Cities 2.pdf",
+            loc: "Section: Shanghai Economic Development"
+        },
+        {
+            q: "What are 'Lilongs' in the context of Shanghai?",
+            options: [
+                "Traditional lane houses/neighborhoods often facing demolition",
+                "New skyscrapers in Pudong",
+                "Shopping malls"
+            ],
+            correct: 0,
+            source: "Cities 2.pdf",
+            loc: "Section: Urban Morphology"
+        },
+        {
+            q: "What is the dominant economic sector in Hong Kong, accounting for over 90% of GDP?",
+            options: [
+                "Manufacturing",
+                "Services",
+                "Agriculture"
+            ],
+            correct: 1,
+            source: "Cities 2.pdf",
+            loc: "Section: Hong Kong Economy"
+        },
+        {
+            q: "Which specific housing issue is highlighted as a sign of severe inequality in Hong Kong?",
+            options: [
+                "Subdivided units and cage homes",
+                "Empty villas",
+                "Underground bunkers"
+            ],
+            correct: 0,
+            source: "Cities 2.pdf",
+            loc: "Section: Social Challenges"
+        },
+        {
+            q: "What project in Seoul involved removing a highway to restore a stream?",
+            options: [
+                "The Gangnam Redevelopment",
+                "The Cheonggyecheon Restoration",
+                "The Han River Bridge"
+            ],
+            correct: 1,
+            source: "Cities 2.pdf / (12_1) Cities 2.pdf",
+            loc: "Section: Seoul Urban Renewal"
+        },
+        {
+            q: "What major demographic challenge is Tokyo currently facing?",
+            options: [
+                "Rapid population explosion",
+                "Aging population and labor shortage",
+                "Excessive youth immigration"
+            ],
+            correct: 1,
+            source: "Cities 2.pdf",
+            loc: "Section: Tokyo Challenges"
+        },
+        {
+            q: "What is the 'Akiya' problem in Japan?",
+            options: [
+                "Traffic congestion",
+                "Abandoned or vacant houses",
+                "Water pollution"
+            ],
+            correct: 1,
+            source: "(12_1) Cities 2.pdf",
+            loc: "Section: Japan Housing Issues"
+        },
+
+        // --- AGRICULTURE 1 & (10_27) ---
+        {
+            q: "Rice (Oryza sativa) provides approximately what percentage of global human calories?",
+            options: [
+                "About 10%",
+                "About 20%",
+                "About 50%"
+            ],
+            correct: 1,
+            source: "Agriculture and Food 1.pdf",
+            loc: "Section: Origins and Diffusion"
+        },
+        {
+            q: "Which cereal has the highest energy content (1528 kJ/100g)?",
+            options: [
+                "Wheat",
+                "Rice",
+                "Maize"
+            ],
+            correct: 1,
+            source: "Agriculture and Food 1.pdf",
+            loc: "Section: Rice as Staple"
+        },
+        {
+            q: "What characterizes the 'North Korea model' of agriculture?",
+            options: [
+                "Market-oriented small farms",
+                "Collective farms and state distribution",
+                "High-tech vertical farming"
+            ],
+            correct: 1,
+            source: "Agriculture and Food 1.pdf",
+            loc: "Section: Agricultural Systems"
+        },
+        {
+            q: "What technology is used by the Japanese company 'Spread' to grow 10 million lettuces a year?",
+            options: [
+                "Traditional soil farming",
+                "Robotics, LED lighting, and controlled environments (Vertical Farming)",
+                "Genetically modified seeds in open fields"
+            ],
+            correct: 1,
+            source: "(10_27) Agriculture and Food 1.pdf",
+            loc: "Section: Technological Future / Ag 4.0"
+        },
+
+        // --- AGRICULTURE 2 & (11_3) ---
+        {
+            q: "Which country is the world's largest fishing nation (captures and aquaculture combined)?",
+            options: [
+                "Japan",
+                "China",
+                "Indonesia"
+            ],
+            correct: 1,
+            source: "Agriculture and Food 2.pdf",
+            loc: "Section: Fishing and Aquaculture"
+        },
+        {
+            q: "What trend is observed in global fish production?",
+            options: [
+                "Aquaculture output has topped wild catch",
+                "Wild catch is growing faster than aquaculture",
+                "Both are declining rapidly"
+            ],
+            correct: 0,
+            source: "(11_3) Agriculture and Food 2.pdf",
+            loc: "Section: Global Fish Production"
+        },
+        {
+            q: "What major dietary transformation occurred in China from 1990 to 2006?",
+            options: [
+                "Increased rice consumption",
+                "Decreased meat consumption",
+                "Increased consumption of meat, dairy, and processed foods"
+            ],
+            correct: 2,
+            source: "Agriculture and Food 2.pdf",
+            loc: "Section: Dietary Transformations"
+        },
+        {
+            q: "What is 'El Desierto Verde' (The Green Desert) referring to?",
+            options: [
+                "Rice paddies in China",
+                "Large-scale soybean monoculture in Argentina/South America",
+                "Tea plantations in Taiwan"
+            ],
+            correct: 1,
+            source: "(11_3) Agriculture and Food 2.pdf",
+            loc: "Section: The Global Soya Trade"
+        },
+        {
+            q: "What epidemic devastated China's pig population between 2018 and 2021?",
+            options: [
+                "Avian Flu (H5N1)",
+                "African Swine Fever (ASF)",
+                "Mad Cow Disease"
+            ],
+            correct: 1,
+            source: "Agriculture and Food 2.pdf",
+            loc: "Section: Pork Crisis"
+        },
+
+        // --- ENERGY & MANUFACTURING 1 & (11_10) ---
+        {
+            q: "What is the difference between Primary and Secondary energy?",
+            options: [
+                "Primary is renewable; Secondary is non-renewable",
+                "Primary is used directly (e.g., coal); Secondary is produced/converted (e.g., electricity)",
+                "Primary is imported; Secondary is domestic"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 1.pdf",
+            loc: "Section: Basic Energy Concepts"
+        },
+        {
+            q: "Which energy source dominates China's energy consumption (approx. 55%)?",
+            options: [
+                "Petroleum",
+                "Coal",
+                "Natural Gas"
+            ],
+            correct: 1,
+            source: "(11_10) Energy and Manufacturing 1.pdf",
+            loc: "Section: China Energy Mix"
+        },
+        {
+            q: "What is Japan's 'Nuclear Dilemma' related to?",
+            options: [
+                "Lack of uranium",
+                "The 2011 Fukushima disaster and subsequent reactor shutdowns",
+                "High cost of nuclear waste disposal"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 1.pdf",
+            loc: "Section: Japan Energy"
+        },
+        {
+            q: "What production system is associated with Toyota?",
+            options: [
+                "Fordism",
+                "Just-in-Time (JIT) / Lean Manufacturing",
+                "State-owned Enterprise"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 1.pdf",
+            loc: "Section: The Toyota Way"
+        },
+
+        // --- ENERGY & MANUFACTURING 2 & (11_17) ---
+        {
+            q: "What term describes South Korea's large family-run conglomerates?",
+            options: [
+                "Keiretsu",
+                "Zaibatsu",
+                "Chaebol"
+            ],
+            correct: 2,
+            source: "(11_17) Energy and Manufacturing 2.pdf",
+            loc: "Section: South Korea Industrial Development"
+        },
+        {
+            q: "What happened during the 'Lost Years' (1948-1953) in Korea?",
+            options: [
+                "Rapid industrialization",
+                "The Korean War caused extensive destruction and economic collapse",
+                "The Japanese occupation began"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 2.pdf",
+            loc: "Section: Korean History"
+        },
+        {
+            q: "What was the 'Gold Donation Campaign' in South Korea (1998) a response to?",
+            options: [
+                "The 2008 Global Recession",
+                "The Asian Financial Crisis",
+                "The COVID-19 Pandemic"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 2.pdf",
+            loc: "Section: 1997 Crisis"
+        },
+        {
+            q: "What does the 'Hamilton Index' (2020) indicate about China?",
+            options: [
+                "China has the cleanest environment",
+                "China's industrial output in strategic sectors exceeds that of the USA",
+                "China has the highest GDP per capita"
+            ],
+            correct: 1,
+            source: "(11_17) Energy and Manufacturing 2.pdf",
+            loc: "Section: China as World Factory"
+        },
+        {
+            q: "What is the 'Middle Income Trap'?",
+            options: [
+                "A tax loophole for the middle class",
+                "Losing low-cost advantage (rising wages) without catching up in high-value innovation",
+                "A decline in population growth"
+            ],
+            correct: 1,
+            source: "(11_17) Energy and Manufacturing 2.pdf",
+            loc: "Section: Economic Challenges"
+        },
+        {
+            q: "What environmental issue is highlighted by the documentary 'Under the Dome'?",
+            options: [
+                "Water scarcity in the Yellow River",
+                "PM2.5 Air Pollution in China",
+                "Deforestation in the Amazon"
+            ],
+            correct: 1,
+            source: "Energy and Manufacturing 2.pdf",
+            loc: "Section: Environmental Costs"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let score = 0;
+    const totalQuestions = quizData.length;
+
+    // DOM Elements
+    const questionText = document.getElementById('question');
+    const optionsContainer = document.getElementById('options');
+    const feedbackSection = document.getElementById('feedback');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackCorrect = document.getElementById('feedback-correct-answer');
+    const feedbackSource = document.getElementById('feedback-source');
+    const nextBtn = document.getElementById('next-btn');
+    const currentQSpan = document.getElementById('current-q');
+    const totalQSpan = document.getElementById('total-q');
+    const progressBar = document.getElementById('progress');
+    const quizArea = document.getElementById('quiz-area');
+    const resultArea = document.getElementById('result-area');
+    const finalScoreSpan = document.getElementById('final-score');
+    const finalTotalSpan = document.getElementById('final-total');
+
+    function initQuiz() {
+        totalQSpan.textContent = totalQuestions;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        const data = quizData[currentQuestionIndex];
+        
+        // Update Progress
+        currentQSpan.textContent = currentQuestionIndex + 1;
+        const progressPercent = ((currentQuestionIndex) / totalQuestions) * 100;
+        progressBar.style.width = `${progressPercent}%`;
+
+        // Reset UI
+        questionText.textContent = data.q;
+        optionsContainer.innerHTML = '';
+        feedbackSection.style.display = 'none';
+        nextBtn.style.display = 'none';
+
+        // Create Options
+        data.options.forEach((opt, index) => {
+            const btn = document.createElement('div');
+            btn.className = 'option-btn';
+            btn.textContent = opt;
+            btn.onclick = () => checkAnswer(index, btn);
+            optionsContainer.appendChild(btn);
+        });
+    }
+
+    function checkAnswer(selectedIndex, clickedBtn) {
+        const data = quizData[currentQuestionIndex];
+        const allBtns = optionsContainer.children;
+
+        // Disable clicks
+        for (let btn of allBtns) {
+            btn.style.pointerEvents = 'none';
+        }
+
+        if (selectedIndex === data.correct) {
+            clickedBtn.classList.add('correct');
+            feedbackTitle.textContent = "Correct!";
+            feedbackTitle.style.color = "#155724";
+            score++;
+        } else {
+            clickedBtn.classList.add('wrong');
+            allBtns[data.correct].classList.add('correct');
+            feedbackTitle.textContent = "Incorrect";
+            feedbackTitle.style.color = "#721c24";
+        }
+
+        feedbackCorrect.textContent = `Correct Answer: ${data.options[data.correct]}`;
+        feedbackSource.textContent = `Source: ${data.source} | ${data.loc}`;
+        
+        feedbackSection.style.display = 'block';
+        nextBtn.style.display = 'inline-block';
+    }
+
+    function nextQuestion() {
+        currentQuestionIndex++;
+        if (currentQuestionIndex < totalQuestions) {
+            loadQuestion();
+        } else {
+            showResult();
+        }
+    }
+
+    function showResult() {
+        quizArea.style.display = 'none';
+        resultArea.style.display = 'block';
+        finalScoreSpan.textContent = score;
+        finalTotalSpan.textContent = totalQuestions;
+        progressBar.style.width = '100%';
+    }
+
+    // Start
+    initQuiz();
+
+</script>
+
 </body>
 </html>
